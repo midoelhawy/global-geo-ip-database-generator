@@ -17,6 +17,8 @@ if __name__ == "__main__":
     apnic_ripeV6_data = str(Path.joinpath(Path(__file__).parents[0], 'db/apnic.db.inet6num'))
     afrinic_data = str(Path.joinpath(Path(__file__).parents[0], 'db/afrinic.db'))
     latine_data = str(Path.joinpath(Path(__file__).parents[0], 'db/lacnic.db'))
+    arin_data = str(Path.joinpath(Path(__file__).parents[0], 'db/arin.db'))
+    arin_transfers_data_json = str(Path.joinpath(Path(__file__).parents[0], 'db/transfers_latest.json'))
     
     os.remove(db_name) if os.path.exists(db_name) else None
     db_handler = SQLiteHandler(db_name)
@@ -40,17 +42,16 @@ if __name__ == "__main__":
             blocks = []
             print(f"Total blocks processed: {total_blocks_processed}")
     
-    
-    RIPE_PARSER.parse_file(latine_data, on_single_block_process)
-    RIPE_PARSER.parse_file(afrinic_data, on_single_block_process)
+
     ##
     RIPE_PARSER.parse_file(default_ripeV4_data,on_single_block_process)
     print(f"Processing Apnic Db")
     RIPE_PARSER.parse_file(apnic_ripeV4_data, on_single_block_process)
-
-
     RIPE_PARSER.parse_file(default_ripeV6_data,on_single_block_process)
     RIPE_PARSER.parse_file(apnic_ripeV6_data,on_single_block_process)
-    
+    RIPE_PARSER.parse_file(arin_data,on_single_block_process,True)
+    RIPE_PARSER.parse_file(latine_data, on_single_block_process)
+    RIPE_PARSER.parse_file(afrinic_data, on_single_block_process)
+    RIPE_PARSER.parse_transfer_json_file(arin_transfers_data_json,on_single_block_process)
 
     print("Done")

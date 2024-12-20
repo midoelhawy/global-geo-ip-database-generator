@@ -6,7 +6,8 @@ apnicV4Url=https://ftp.apnic.net/apnic/whois/apnic.db.inetnum.gz
 apnicV6Url=https://ftp.apnic.net/apnic/whois/apnic.db.inet6num.gz
 afrinicUrl=https://ftp.afrinic.net/dbase/afrinic.db.gz
 lacnicUrl=https://ftp.lacnic.net/lacnic/dbase/lacnic.db.gz
-
+arinUrl=https://ftp.arin.net/pub/rr/arin.db.gz
+arin_transfare_registryUrl=https://ftp.arin.net/pub/stats/arin/transfers/transfers_latest.json
 destination="db"
 force="false"
 
@@ -90,4 +91,24 @@ if [ ! -f "$destination/lacnic.db" ] || [ "$force" = "true" ]; then
     echo "Extraction complete."
 else
     echo "IP lacnic file already exists in $destination. Use --force to download again."
+fi
+
+if [ ! -f "$destination/arin.db" ] || [ "$force" = "true" ]; then
+    echo "Downloading IPv file from $arinUrl..."
+    wget -q "$arinUrl" -P "$destination"
+    echo "Extracting file..."
+    gzip -d "$destination/arin.db.gz"
+    echo "Extraction complete."
+    rm -rf "$arinUrl/arin.db.gz"
+    echo "Extraction complete."
+else
+    echo "IP Arin file already exists in $destination. Use --force to download again."
+fi
+
+if [ ! -f "$destination/transfers_latest.json" ] || [ "$force" = "true" ]; then
+    echo "Downloading IPv file from $arin_transfare_registryUrl..."
+    wget -q "$arin_transfare_registryUrl" -P "$destination"
+    echo "Extraction complete."
+else
+    echo "IP Arin transfare registry file already exists in $destination. Use --force to download again."
 fi
