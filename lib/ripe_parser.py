@@ -9,12 +9,28 @@ class RIPE_PARSER:
         pass
 
     
-    def get_ip_v6_first_and_last_ip(sub_net):
-        ip,subnet = sub_net.split("/",1)
-        first_ip = ipaddress.IPv6Address(ip)
-        last_ipv6 = (ipaddress.IPv6Address(first_ip) + (2 ** (128 - int(subnet)) - 1))
-        return first_ip.exploded,last_ipv6.exploded,ip,int(first_ip),int(last_ipv6),subnet
-        
+    def get_ip_v6_first_and_last_ip(sub_net_or_range):
+ 
+        if "/" in sub_net_or_range:  # Formato IP/Subnet
+            ip, subnet = sub_net_or_range.split("/", 1)
+            first_ip = ipaddress.IPv6Address(ip)
+            last_ip = first_ip + (2 ** (128 - int(subnet)) - 1)
+        elif " - " in sub_net_or_range:  # Formato FirstIp - LastIp
+            first_ip_str, last_ip_str = map(str.strip, sub_net_or_range.split("-", 1))
+            first_ip = ipaddress.IPv6Address(first_ip_str)
+            last_ip = ipaddress.IPv6Address(last_ip_str)
+            subnet = None  # Subnet non applicabile in questo formato
+        else:
+            raise ValueError("Formato non riconosciuto. Usa 'IP/Subnet' o 'FirstIp - LastIp'.")
+
+        return (
+            first_ip.exploded,  # Primo indirizzo in forma completa
+            last_ip.exploded,   # Ultimo indirizzo in forma completa
+            str(first_ip),      # Primo indirizzo in forma compressa
+            int(first_ip),      # Primo indirizzo come intero
+            int(last_ip),       # Ultimo indirizzo come intero
+            subnet              # Subnet o None
+        )
 
     def format_block(block):
         new_block = {}
@@ -108,8 +124,78 @@ class RIPE_PARSER:
                 new_block["ip_version"] = 4
                 cb(new_block)
 
+
+    def parse_arin_file(file_path, cb: Callable[[dict], None]):
+        """
+        Legge un file di blocchi riga per riga, analizza i dati e chiama il callback `cb` 
+        con il blocco formattato compatibile con RIPE_PARSER.format_block.
+        """
+        block_lines = []
+        
+        def process_block(lines):
+            """Parsa e formatta un blocco di righe."""
+            if not lines:
+                return  # Nessun blocco da processare
+            
+            parsed_block = {}
+            for line in lines:
+                # Gestione delle righe con formato chiave: valore
+                if ": " in line:
+                    key, value = map(str.strip, line.split(": ", 1))
+                    key = key.lower()  # Normalizza la chiave in minuscolo
+                    
+                    if key == "comment":
+                        if "comment" not in parsed_block:
+                            parsed_block["comment"] = []
+                        parsed_block["comment"].append(value)
+                    else:
+                        parsed_block[key] = value
+                elif line.startswith("Comment:"):
+                    comment = line.replace("Comment:", "").strip()
+                    if "comment" not in parsed_block:
+                        parsed_block["comment"] = []
+                    parsed_block["comment"].append(comment)
+
+            # Identifica IPv4 o IPv6 e costruisce il blocco formattato
+            if "nethandle" in parsed_block:  # IPv4
+                ip_version = 4
+            elif "v6nethandle" in parsed_block:  # IPv6
+                ip_version = 6
+            else:
+                print(f"Skipping block because it has no nethandle or v6nethandle")
+                return
+
+            formatted_block = {
+                "ipVersion": ip_version,
+                "inetnum": parsed_block["netrange"].lower(),  # Sempre lowercase
+                "netname": parsed_block.get("netname", "Unknown"),
+                "descr": "\n".join(parsed_block.get("comment", [])),
+                "country": parsed_block.get("country", "Unknown"),
+                "mnt-by": parsed_block.get("mnt-by", "Unknown"),
+                "regdate": parsed_block.get("regdate", "Unknown"),
+                "updated": parsed_block.get("updated", "Unknown"),
+                "source": parsed_block.get("source", "Unknown"),
+            }
+
+            # Chiama il callback con il blocco formattato
+            cb(RIPE_PARSER.format_block(formatted_block))
+
+        with open(file_path, 'r') as file:
+            for line in file:
+                line = line.strip()
+                if line == "":
+                    # Fine di un blocco, processa il blocco raccolto
+                    process_block(block_lines)
+                    block_lines = []  # Reset per il prossimo blocco
+                else:
+                    block_lines.append(line)
+            
+            # Processa l'ultimo blocco se esiste
+            process_block(block_lines)
+
+
     
-    def parse_file(file_path,cb:Callable[[dict],None], parseRoute:bool=False):
+    def parse_file(file_path,cb:Callable[[dict],None], parseRoute:bool=False, arinDb:bool=False):
         data = []
         with open(file_path, 'r',-1,"latin-1") as file:
             block = {}
@@ -120,7 +206,10 @@ class RIPE_PARSER:
                 if parseRoute and (line.startswith("route:") or line.startswith("route6:") ) :
                     key, value = line.split(":", 1)
                     line = f"inetnum:{value}" if key == "route" else f"inet6num:{value}" if key == "route6" else line
-
+                    
+                if arinDb and (line.startswith("NetHandle:") or line.startswith("V6NetHandle:") ) :
+                    key, value = line.split(":", 1)
+                    line = f"inetnum:{value}" if key == "NetHandle" else f"inet6num:{value}" if key == "V6NetHandle" else line
                     
                     
                 if line.startswith("inetnum:") or line.startswith("inet6num:"):
