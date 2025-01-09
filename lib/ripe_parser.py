@@ -77,6 +77,7 @@ class RIPE_PARSER:
         new_block["descr"] = block.get("descr", "Unknown")
         new_block["mnt-by"] = block.get("mnt-by", "Unknown")
         new_block["ip_version"] = block.get("ipVersion", 4)
+        new_block["nettype"] = block.get("nettype", "Unknown")
         
         return new_block
     @staticmethod
@@ -175,6 +176,7 @@ class RIPE_PARSER:
                 "regdate": parsed_block.get("regdate", "Unknown"),
                 "updated": parsed_block.get("updated", "Unknown"),
                 "source": parsed_block.get("source", "Unknown"),
+                "nettype": parsed_block.get("nettype", "Unknown"),
             }
 
             # Chiama il callback con il blocco formattato

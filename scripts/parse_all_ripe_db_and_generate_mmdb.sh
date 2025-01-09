@@ -17,5 +17,5 @@ echo "Downloaded latest mmdb base db"
 
 
 echo "Generate MMDB file..."
-cd ./scripts && go run generate_mmdb.go
+cd ./scripts && python generate_mmdb.py
 echo "MMDB file generated."

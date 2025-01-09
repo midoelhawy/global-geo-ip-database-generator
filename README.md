@@ -18,19 +18,19 @@
 ###### To download latest `SQLITE_DB`:
 
 ```bash
-    wget -O "./ripe_data.db.zip" "https://github.com/midoelhawy/global-geo-ip-database-generator/releases/latest/download/db.sqlite.zip"
-    unzip -o ".ripe_data.db.zip" -d "./"
-    rm "./ripe_data.db.zip"
+    wget -O "./geolocation_db.db.zip" "https://github.com/midoelhawy/global-geo-ip-database-generator/releases/latest/download/db.sqlite.zip"
+    unzip -o ".geolocation_db.db.zip" -d "./"
+    rm "./geolocation_db.db.zip"
 
 ```
 
 ###### To download latest `MMDB`:
 
 ```bash
-    wget -O "./ripe_data.db.zip" "https://github.com/midoelhawy/global-geo-ip-database-generator/releases/latest/download/ASN_COUNTRY_AND_CITY.mmdb
+    wget -O "./geolocation_db.db.zip" "https://github.com/midoelhawy/global-geo-ip-database-generator/releases/latest/download/ASN_COUNTRY_AND_CITY.mmdb
 "
-    unzip -o ".ripe_data.db.zip" -d "./"
-    rm "./ripe_data.db.zip"
+    unzip -o ".geolocation_db.db.zip" -d "./"
+    rm "./geolocation_db.db.zip"
 
 ```
 
