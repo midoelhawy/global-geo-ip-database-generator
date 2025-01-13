@@ -15,6 +15,9 @@ echo "Downloaing latest mmdb base db"
 ./scripts/download_latest_mmdb.sh
 echo "Downloaded latest mmdb base db"
 
+echo "Generate asn database"
+python3 ./scripts/generate_asn_db.py
+echo "asn database generated"
 
 echo "Generate MMDB file..."
 cd ./scripts && python generate_mmdb.py
